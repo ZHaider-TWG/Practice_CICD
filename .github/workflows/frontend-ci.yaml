@@ -1,0 +1,42 @@
+name: Frontend CI
+
+on:
+  push:
+    paths:
+      - "Practice_ec2_frontend/**"
+      - ".github/workflows/**"
+  pull_request:
+    paths:
+      - "Practice_ec2_frontend/**"
+      - ".github/workflows/**"
+
+jobs:
+  test-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Practice_ec2_frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: Practice_ec2_frontend/package-lock.json
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint --if-present
+
+      - name: Test
+        run: npm run test --if-present
+        env:
+          CI: true
+
+      - name: Build
+        run: npm run build
