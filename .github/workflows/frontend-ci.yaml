@@ -4,11 +4,11 @@ on:
   push:
     paths:
       - "Practice_ec2_frontend/**"
-      - ".github/workflows/**"
+      - ".github/workflows/frontend-ci.yaml"
   pull_request:
     paths:
       - "Practice_ec2_frontend/**"
-      - ".github/workflows/**"
+      - ".github/workflows/frontend-ci.yaml"
 
 jobs:
   test-build:
