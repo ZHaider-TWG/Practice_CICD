@@ -8,11 +8,10 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 
-// ===== FIX __dirname FOR ES MODULES =====
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-// ===== API ROUTE =====
+
 app.get("/api/catfact", async (req, res) => {
   try {
     const response = await fetch("https://catfact.ninja/fact")
@@ -23,7 +22,7 @@ app.get("/api/catfact", async (req, res) => {
   }
 })
 
-// ===== SERVE FRONTEND BUILD =====
+// frontend static serving
 const frontendPath = path.join(__dirname, "../frontend/dist")
 
 app.use(express.static(frontendPath))
@@ -32,7 +31,7 @@ app.get("*", (req, res) => {
   res.sendFile(path.join(frontendPath, "index.html"))
 })
 
-// ===== START SERVER =====
+=
 app.listen(3000, () => {
   console.log("Server listening on http://localhost:3000")
 })
