@@ -1,0 +1,97 @@
+name: CD - Deploy to EC2 (10 min test window)
+
+on:
+  workflow_run:
+    workflows: ["Backend CI", "Frontend CI"]
+    types:
+      - completed
+
+concurrency:
+  group: cd-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repo (so we have workflow files locally)
+        uses: actions/checkout@v4
+
+      - name: Verify BOTH Backend CI + Frontend CI succeeded for this same commit
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const sha = context.payload.workflow_run.head_sha;
+
+            async function getConclusion(workflowFile) {
+              const res = await github.rest.actions.listWorkflowRuns({
+                owner,
+                repo,
+                workflow_id: workflowFile,
+                head_sha: sha,
+                per_page: 10
+              });
+
+              const run = res.data.workflow_runs.find(r => r.head_sha === sha);
+              return run?.conclusion;
+            }
+
+            const backend = await getConclusion(".github/workflows/backend-ci.yaml");
+            const frontend = await getConclusion(".github/workflows/frontend-ci.yaml");
+
+            core.info(`Commit: ${sha}`);
+            core.info(`Backend CI conclusion: ${backend}`);
+            core.info(`Frontend CI conclusion: ${frontend}`);
+
+            if (backend !== "success" || frontend !== "success") {
+              core.setFailed(
+                `Not deploying. Need BOTH Backend CI and Frontend CI to be success for sha=${sha}.`
+              );
+            }
+
+      - name: Deploy via SSH (git pull, build frontend, start server.js for 10 minutes)
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_SSH_PORT || 22 }}
+          script: |
+            set -e
+
+            echo "Connected to EC2. Pulling latest changes..."
+            cd ~/PRACTICE_CICD || cd ~/Practice_CICD || cd ~
+            git pull
+
+            echo "Installing backend deps..."
+            cd Practice_ec2_backend
+            npm ci
+
+            echo "Building frontend..."
+            cd ../Practice_ec2_frontend
+            npm ci
+            npm run build
+
+            echo "Starting backend server.js (10 min test window)..."
+            cd ../Practice_ec2_backend
+
+            # stop any old server.js still running (optional but recommended)
+            pkill -f "node server.js" || true
+
+            # start server in background, but tie lifetime to this SSH script
+            # (we kill it before SSH exits)
+            node server.js &
+            SERVER_PID=$!
+
+            echo "server.js started with PID=$SERVER_PID"
+            echo "Keeping it alive for 10 minutes for testing..."
+            sleep 600
+
+            echo "Stopping server.js..."
+            kill $SERVER_PID || true
+
+            echo "Done."
