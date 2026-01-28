@@ -2,13 +2,21 @@ import { useEffect, useState, useCallback } from "react";
 import "./App.css";
 
 function App() {
-  const [apiResp, setApiResp] = useState("");
+  const [apiResp1, setApiResp1] = useState("");
+  const [apiResp2, setApiResp2] = useState("");
 
-  const fetchCatFact = useCallback(async () => {
+  const fetchCatFact1 = useCallback(async () => {
     const response = await fetch("/api/catfact");
     if (!response.ok) throw new Error("Failed to fetch cat fact");
     const data = await response.json();
-    setApiResp(data.fact);
+    setApiResp1(data.fact);
+  }, []);
+
+  const fetchCatFact2 = useCallback(async () => {
+    const response = await fetch("/api/catfact");
+    if (!response.ok) throw new Error("Failed to fetch cat fact");
+    const data = await response.json();
+    setApiResp2(data.fact);
   }, []);
 
   useEffect(() => {
@@ -18,7 +26,7 @@ function App() {
       const response = await fetch("/api/catfact");
       if (!response.ok) return;
       const data = await response.json();
-      if (!cancelled) setApiResp(data.fact);
+      if (!cancelled) setApiResp1(data.fact);
     })();
 
     return () => {
@@ -26,13 +34,15 @@ function App() {
     };
   }, []);
 
-  console.log("App rendered!");
-
   return (
     <div>
-      <h1>fact:</h1>
-      <p>{apiResp}</p>
-      <button onClick={fetchCatFact}>new fact</button>
+      <h1>fact 1:</h1>
+      <p>{apiResp1}</p>
+      <button onClick={fetchCatFact1}>new fact 1</button>
+
+      <h1>fact 2:</h1>
+      <p>{apiResp2}</p>
+      <button onClick={fetchCatFact2}>new fact 2</button>
     </div>
   );
 }
