@@ -2,13 +2,9 @@ name: Frontend CI
 
 on:
   push:
-    paths:
-      - "Practice_ec2_frontend/**"
-      - ".github/workflows/frontend-ci.yaml"
+    branches: [main]
   pull_request:
-    paths:
-      - "Practice_ec2_frontend/**"
-      - ".github/workflows/frontend-ci.yaml"
+    branches: [main]
 
 jobs:
   test-build:
