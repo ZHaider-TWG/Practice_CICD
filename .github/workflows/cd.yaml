@@ -68,7 +68,7 @@ jobs:
             set -e
 
             echo "Connected to EC2. Pulling latest changes..."
-            cd ~/PRACTICE_CICD || cd ~/Practice_CICD || cd ~
+            cd /home/ubuntu/Practice_CICD
             git pull
 
             echo "Installing backend deps..."
