@@ -1,4 +1,4 @@
-name: CD - Deploy to EC2 (10 min test window)
+name: CD - Deploy to EC2
 
 on:
   workflow_run:
@@ -16,17 +16,17 @@ jobs:
   deploy:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 15
 
     steps:
-      - name: Deploy via SSH (git pull, build frontend, start server.js for 10 minutes)
+      - name: Deploy via SSH (git pull, build frontend, restart backend with pm2)
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.EC2_SSH_PORT || '22' }}
-          command_timeout: 25m
+          command_timeout: 15m
           script: |
             set -e
 
@@ -41,8 +41,7 @@ jobs:
 
             echo "Forcing origin remote to SSH..."
             git remote set-url origin git@github.com:${{ github.repository }}.git
-
-            git pull
+            git pull --ff-only
 
             echo "Installing backend deps..."
             cd Practice_ec2_backend
@@ -53,25 +52,14 @@ jobs:
             npm ci
             npm run build
 
-            echo "Starting backend server.js (10 min test window)..."
+            echo "Starting/restarting backend with pm2..."
             cd ../Practice_ec2_backend
 
-            pkill -f "node server.js" || true
+            command -v pm2 >/dev/null 2>&1 || { echo "pm2 not found on EC2. Install it: npm i -g pm2"; exit 1; }
 
-            node server.js &
-            SERVER_PID=$!
+            pm2 describe practice-backend >/dev/null 2>&1 && pm2 restart practice-backend || pm2 start server.js --name practice-backend
 
-            echo "server.js started with PID=$SERVER_PID"
+            pm2 save
 
-            trap 'echo "Got TERM/INT - stopping server.js..."; kill $SERVER_PID || true; exit 143' TERM INT
-
-            echo "Keeping it alive for 10 minutes for testing..."
-            for i in {1..20}; do
-              echo "Still running... minute $((i/2))"
-              sleep 30
-            done
-
-            echo "Stopping server.js..."
-            kill $SERVER_PID || true
-
-            echo "Done."
+            echo "pm2 status:"
+            pm2 status
