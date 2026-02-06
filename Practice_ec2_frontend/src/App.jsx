@@ -3,20 +3,12 @@ import "./App.css";
 
 function App() {
   const [apiResp1, setApiResp1] = useState("");
-  const [apiResp2, setApiResp2] = useState("");
 
   const fetchCatFact1 = useCallback(async () => {
     const response = await fetch("/api/catfact");
     if (!response.ok) throw new Error("Failed to fetch cat fact");
     const data = await response.json();
     setApiResp1(data.fact);
-  }, []);
-
-  const fetchCatFact2 = useCallback(async () => {
-    const response = await fetch("/api/catfact");
-    if (!response.ok) throw new Error("Failed to fetch cat fact");
-    const data = await response.json();
-    setApiResp2(data.fact);
   }, []);
 
   useEffect(() => {
