@@ -29,6 +29,14 @@ const frontendPath = path.join(
   "../Practice_ec2_frontend/dist"
 )
 
+app.use((req, res, next) => {
+  if (req.path === "/" || req.path.endsWith("index.html")) {
+    res.setHeader("Cache-Control", "no-store");
+  }
+  next();
+});
+
+
 app.use(express.static(frontendPath))
 
 app.get(/.*/, (req, res) => {
