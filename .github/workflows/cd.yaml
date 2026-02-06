@@ -43,7 +43,7 @@ jobs:
             git remote set-url origin git@github.com:${{ github.repository }}.git
             git pull --ff-only
 
-            echo "Installing backend deps..."
+            echo "Installing backend deps.."
             cd Practice_ec2_backend
             npm ci
 
