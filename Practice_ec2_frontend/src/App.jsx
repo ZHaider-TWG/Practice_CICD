@@ -40,9 +40,6 @@ function App() {
       <p>{apiResp1}</p>
       <button onClick={fetchCatFact1}>new fact 1</button>
 
-      <h1>Fact2:</h1>
-      <p>{apiResp2}</p>
-      <button onClick={fetchCatFact2}>another fact</button>
     </div>
   );
 }
