@@ -1,4 +1,4 @@
-name: CD - Deploy to EC2
+name: CD - Deploy to DigitalOcean VPS
 
 on:
   workflow_run:
@@ -36,8 +36,8 @@ jobs:
             ssh-keyscan -H github.com >> ~/.ssh/known_hosts
             chmod 644 ~/.ssh/known_hosts
 
-            echo "Connected to EC2. Pulling latest changes..."
-            cd /home/ubuntu/Practice_CICD
+            echo "Connected to VPS. Pulling latest changes..."
+            cd /home/${{ secrets.DO_USER }}/Practice_CICD
 
             echo "Forcing origin remote to SSH..."
             git remote set-url origin git@github.com:${{ github.repository }}.git
@@ -55,7 +55,7 @@ jobs:
             echo "Starting/restarting backend with pm2..."
             cd ../Practice_ec2_backend
 
-            command -v pm2 >/dev/null 2>&1 || { echo "pm2 not found on EC2. Install it: npm i -g pm2"; exit 1; }
+            command -v pm2 >/dev/null 2>&1 || { echo "pm2 not found on VPS. Install it: npm i -g pm2"; exit 1; }
 
             pm2 describe practice-backend >/dev/null 2>&1 && pm2 restart practice-backend || pm2 start server.js --name practice-backend
 
