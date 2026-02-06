@@ -37,7 +37,7 @@ jobs:
             chmod 644 ~/.ssh/known_hosts
 
             echo "Connected to VPS. Pulling latest changes..."
-            cd /home/${{ secrets.DO_USER }}/Practice_CICD
+            cd /home/${{ secrets.EC2_USER }}/Practice_CICD
 
             echo "Forcing origin remote to SSH..."
             git remote set-url origin git@github.com:${{ github.repository }}.git
